@@ -11,7 +11,7 @@ class Builder(object):
 class Build(object):
 	def __init__(self, build_results):
 		for attr in ('builder_name', 'reason', 'slavename', 'results',
-					'text', 'start', 'end', 'steps'):
+					'text', 'start', 'end', 'steps', 'branch', 'revision', 'number'):
 			setattr(self, attr, build_results.get(attr, 'UNDEFINED'))
 		try:
 			self.start = datetime.fromtimestamp(self.start, utc)

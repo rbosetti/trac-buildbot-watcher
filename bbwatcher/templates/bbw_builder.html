@@ -18,16 +18,16 @@
       <div>
         <ul style="list-style: none">
           <li>Slave: ${builder.current.slavename}</li>
-          <li>Revision: ${builder.current.text  or wiki_to_oneliner(context, '[wiki:TryBuildUsage Forced Build]')}</li>
-          <li>Status: ${builder.current.results}</li>
+          <li>Revision: ${wiki_to_oneliner(context, '[wiki:TryBuildUsage Forced Build]')}</li>
+          <li>Status: <strong>${builder.current.results and 'failed' or 'successful'}</strong></li>
         </ul>
       </div>
       <h2>Recent Builds</h2>
-      <ul py:if="builder.recent">
-        <li py:for="build in builder.recent">
-          On ${format_date(build.end)}: rev=${build.revision or wiki_to_oneliner(context, '[wiki:TryBuildUsage Forced Build]')} -- ${build.result} <a href="${href.buildbot('build/%s'%build.id)}">#${build.id}</a>
-        </li>
-      </ul>
+      <div py:if="builder.recent" id="changelog">
+        <div py:for="build in builder.recent" class="comment" xml:space="preserve">
+            (${format_date(build.end)}) rev=[${build.branch or 'trunk'}@${build.revision and href.changeset(build.revision) or '??'}] <a href="${href.buildbot('builder/%s/build/%s'%(build.builder_name, build.number))}">#${build.number}</a><blockquote>${build.reason}</blockquote>
+        </div>
+      </div>
       <div py:if="builder.slaves">
         <h2>Buildslaves</h2>
         <ol>

@@ -1,15 +1,25 @@
 import xmlrpclib
+import urlparse
 
 from model import Builder, Build
 
 class BuildBotSystem(object):
 	def __init__(self, url):
-		self.server = xmlrpclib.ServerProxy(url)
+		try:
+			scheme, loc, path, _ ,_ = urlparse.urlsplit(url, scheme='http')
+			url = '%s://%s/%s/xmlrpc'%(scheme, loc, path)
+			self.server = xmlrpclib.ServerProxy(url)
+		except Exception, e:
+			raise ValueError('Invalid BuildBot XML-RPC server %s: %s'%(url, e))
 	def getAllBuildsInInterval(self, start, stop):
 		return self.server.getAllBuildsInInterval(start, stop)
 	def getBuilder(self, name):
-		s = self.server
-		builds = [Build(name, s.getBuild(-i)) for i in range(5, 1, -1)]
+		builds = []
+		for i in range(1, 5+1):
+			try:
+				builds.append(Build(self.server.getBuild(name, -i)))
+			except Exception, e:
+				break
 		return Builder(name, builds, [])
 	def getAllBuilders(self):
 		return self.server.getAllBuilders()

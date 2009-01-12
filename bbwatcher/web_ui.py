@@ -20,8 +20,8 @@ from api import BuildBotSystem
 class TracBuildBotWatcher(Component):
 	implements(ITimelineEventProvider, IRequestHandler, ITemplateProvider,
 		INavigationContributor)
-	buildbot_url = Option('bbwatcher', 'buildmaster', 'http://127.0.0.1:8010/xmlrpc')
-	#buildbot_url = Option('bbwatcher', 'buildmaster', 'buildbot.buildbot.net/xmlrpc')
+	buildbot_url = Option('bbwatcher', 'buildmaster', '127.0.0.1:8010',
+		'The location of the BuildBot webserver. Do not include the /xmlrpc')
 
 	BUILDER_REGEX = r'/buildbot/builder(?:/(.+))?$'
 	BUILDER_RE = re.compile(BUILDER_REGEX)
@@ -36,9 +36,11 @@ class TracBuildBotWatcher(Component):
 		return 'buildbot'
 	def get_navigation_items(self, req):
 		yield 'mainnav', 'buildbot', tag.a('BuildBot',href=req.href.buildbot())
+
 	# Timeline Methods
 	def get_timeline_filters(self, req):
 		yield  ('bbwatcher', 'Builds', False)
+
 	def get_timeline_events(self, req, start, stop, filters):
 		#if not 'bbwatcher' in filters:
 		#	return
@@ -53,15 +55,16 @@ class TracBuildBotWatcher(Component):
 			# (builder_name, num, end, branch, rev, results, text)
 			print 'Reporting build', build
 			yield ('build', to_datetime(build[2]), '', build)
+
 	def render_timeline_event(self, context, field, event):
 		builder_name, num, end, branch, rev, results, text = event[3]
 		if field == 'url':
-			return context.href.changeset(rev)
+			return None
 		elif field == 'title':
-			return tag('Build ', tag.em('#', num),
+			return tag('Build ', tag.a('#%s'%num, href=context.href.buildbot('builder/%s/%s'%(builder_name, num))),
 				' of ', builder_name, ' ', results == 'success' and 'passed' or 'failed')
 		elif field == 'description':
-			return format_to_oneliner(self.env, context, 'Built from r%s sources'%(rev or 'NONE (see TryBuildUsage)'))
+			return format_to_oneliner(self.env, context, 'Built from %s'%(rev and 'r%s sources'%rev or 'local changes (see TryBuildUsage)'))
 
 	# RequestHandler
 	def _handle_builder(self, req):
@@ -90,7 +93,11 @@ class TracBuildBotWatcher(Component):
 				print 'Error fetching builder stats', e
 			data['context'] = Context.from_request(req, ('buildbot', builder))
 			return 'bbw_builder.html', data, 'text/html'
+
 	def match_request(self, req):
 		return req.path_info.startswith('/buildbot') and 1 or 0
+
 	def process_request(self, req):
-		return self._handle_builder(req)
+		if req.path_info.startswith('/buildbot/builder'):
+			return self._handle_builder(req)
+		return 'bbw_welcome.html', { 'url': self.buildbot_url }, 'text/html'
