@@ -13,6 +13,6 @@ setup(
     description='A plugin to fetch/integrate status updates from the BuildBot XML-RPC interface',
     license='GPL',
     entry_points={
-        'trac.plugins': [ 'bbwatcher=bbwatcher' ],
+        'trac.plugins': 'bbwatcher.web_ui=bbwatcher.web_ui',
         }
 )

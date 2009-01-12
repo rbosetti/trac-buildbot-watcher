@@ -1,0 +1,43 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="layout.html" />
+  <xi:include href="macros.html" />
+  <head>
+    <title py:if="title">$title</title>
+    <meta py:if="version" name="ROBOTS" content="NOINDEX, NOFOLLOW" />
+  </head>
+
+  <body>
+    <div id="content">
+      <h1>Builder: ${builder.name}</h1>
+      <h2 py:if="builder.current">Running Build</h2>
+      <div>
+        <ul style="list-style: none">
+          <li>Slave: ${builder.current.slavename}</li>
+          <li>Revision: ${builder.current.text  or wiki_to_oneliner(context, '[wiki:TryBuildUsage Forced Build]')}</li>
+          <li>Status: ${builder.current.results}</li>
+        </ul>
+      </div>
+      <h2>Recent Builds</h2>
+      <ul py:if="builder.recent">
+        <li py:for="build in builder.recent">
+          On ${format_date(build.end)}: rev=${build.revision or wiki_to_oneliner(context, '[wiki:TryBuildUsage Forced Build]')} -- ${build.result} <a href="${href.buildbot('build/%s'%build.id)}">#${build.id}</a>
+        </li>
+      </ul>
+      <div py:if="builder.slaves">
+        <h2>Buildslaves</h2>
+        <ol>
+          <li py:for="slave in builder.slaves">
+            <div>Status: ${slave.connected and 'Connected' or 'Disconnected'}</div>
+            <div>Admin: ${author_info(slave.admin)}</div>
+            <div>Host: <pre>${slave.description}</pre></div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </body>
+</html>
