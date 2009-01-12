@@ -1,9 +1,11 @@
+from datetime import mktime
 from genshi.builder import tag
 
 from trac.core import Component
 from trac.timeline.api import ITimelineEventProvider
 from trac.wiki.formatter import format_to, format_to_html, format_to_oneliner
 from trac.util.translation import _, tag_
+from trac.util.datefmt import to_timestamp, to_datetime
 
 from api import BuildBotSystem
 
@@ -19,10 +21,10 @@ class TracBuildBotWatcher(Component):
 			return
 		master = BuildBotSystem(self.env)
 		# This was a comprehension: the loop is clearer
-		for build in master.getAllBuildsInInterval(start, stop):
+		for build in master.getAllBuildsInInterval(to_timestamp(start), to_timestamp(stop)):
 			# BuildBot builds are reported as
 			# (builder_name, num, end, branch, rev, results, text)
-			yield ('build', mktime(build[2]), '', build)
+			yield ('build', to_datetime(build[2]), '', build)
 	def render_timeline_event(self, context, field, event):
 		builder_name, num, end, branch, rev, results, text = event[3]
 		if field == 'url':
